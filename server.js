@@ -68,7 +68,11 @@ io.sockets.on("connection",function(socket){
 	});
 	socket.on('patient_load_doctor',function(data){
 			console.log(data);
-			var sqlSelect = "select "
+			var sqlSelect = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=1 ";                       
+			connection.query(sqlSelect,function(err,results,fields){
+				if(err)throw err;
+				socket.emit('server_load_doctor_list',{arrayDoctor : results});
+			});
 	});
 	socket.on('doctor_login',function(data){
 		var check = false;
@@ -94,7 +98,11 @@ io.sockets.on("connection",function(socket){
 					console.log("record insert 1 doctor is online");
 				});
 				console.log("dang nhap thanh cong");
-				socket.emit('server_reload_doctor_list',{danhsach : alo});
+				var sqlSelect = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=1 ";                       
+			    connection.query(sqlSelect,function(err,results,fields){
+				if(err)throw err;
+				io.sockets.emit('server_load_doctor_list',{arrayDoctor : results});
+			});
 				socket.emit('server_check_login_doctor',{ket_qua : check});
 			}else{
 				console.log("dang nhap that bai");
@@ -116,6 +124,11 @@ io.sockets.on("connection",function(socket){
 			connection.query(sqlDelete,function(err,results,fields){
 				if(err)throw err;
 				console.log("delete complete");
+			});
+			var sqlSelect = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=1 ";                       
+			    connection.query(sqlSelect,function(err,results,fields){
+				if(err)throw err;
+				io.sockets.emit('server_load_doctor_list',{arrayDoctor : results});
 			});
 	});
 	// socket.on('benhnhan_dangnhap',function(data){
