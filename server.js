@@ -19,6 +19,10 @@ connection.connect(function(err){
 });
 io.sockets.on("connection",function(socket){
 	console.log("DEVICE CONNECTED ID: " + socket.id);
+
+	// PATIENT REQUEST 
+
+
 	socket.on('patient_login',function(data){
 		var check = false;
 		var info = JSON.parse(data);
@@ -68,12 +72,17 @@ io.sockets.on("connection",function(socket){
 	});
 	socket.on('patient_load_doctor',function(data){
 			console.log(data);
-			var sqlSelect = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=1 ";                       
+			var sqlSelect = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID="+data+"";                       
 			connection.query(sqlSelect,function(err,results,fields){
 				if(err)throw err;
 				socket.emit('server_load_doctor_list',{arrayDoctor : results});
 			});
 	});
+
+
+	// DOCTOR REQUEST 
+
+
 	socket.on('doctor_login',function(data){
 		var check = false;
 		var info = JSON.parse(data);
@@ -98,16 +107,13 @@ io.sockets.on("connection",function(socket){
 					console.log("record insert 1 doctor is online");
 				});
 				console.log("dang nhap thanh cong");
-				var sqlSelect = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=1 ";                       
-			    connection.query(sqlSelect,function(err,results,fields){
-				if(err)throw err;
-				io.sockets.emit('server_load_doctor_list',{arrayDoctor : results});
-			});
 				socket.emit('server_check_login_doctor',{ket_qua : check});
-			}else{
+			}
+			else{
 				console.log("dang nhap that bai");
 			}
 		});
+			
 	});
 	socket.on('doctor_relogin',function(data){
 			console.log(data);
@@ -125,84 +131,39 @@ io.sockets.on("connection",function(socket){
 				if(err)throw err;
 				console.log("delete complete");
 			});
-			var sqlSelect = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=1 ";                       
-			    connection.query(sqlSelect,function(err,results,fields){
+			socket.emit("server_check_logout_doctor",{ket_qua : "1" });
+	});
+	socket.on('doctor_request_reload_doctor',function(data){
+		    var arrayDoctorList = new Array();
+			var sqlSelect1 = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=1";
+			connection.query(sqlSelect1,function(err,results,fields){
 				if(err)throw err;
-				io.sockets.emit('server_load_doctor_list',{arrayDoctor : results});
+				console.log(results);
+				io.sockets.emit('server_reload_doctor_1',{arrayDoctor : results});
+			});
+			var sqlSelect2 = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=2";
+			connection.query(sqlSelect2,function(err,results,fields){
+				if(err)throw err;
+				console.log(results);
+				io.sockets.emit('server_reload_doctor_2',{arrayDoctor : results});
+			});
+			var sqlSelect3 = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=3";
+			connection.query(sqlSelect3,function(err,results,fields){
+				if(err)throw err;
+				console.log(results);
+				io.sockets.emit('server_reload_doctor_3',{arrayDoctor : results});
+			});
+			var sqlSelect4 = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=4";
+			connection.query(sqlSelect4,function(err,results,fields){
+				if(err)throw err;
+				console.log(results);
+				io.sockets.emit('server_reload_doctor_4',{arrayDoctor : results});
 			});
 	});
-	// socket.on('benhnhan_dangnhap',function(data){
-	// 	var check=false;
-	// 	for(var i=0;i<mangDangNhap.length;i++){
-	// 		if(data==mangDangNhap[i]){
-	// 		check=true;
-	// 		break;
-	// 		}
-	// 	}
-	// 	if(check){
-	// 		pass=true;
-	// 		socket.emit('server_thongqua_benhnhan', {ketqua: pass});
-	// 		io.sockets.emit("server_gui_dsbacsi",{danhsach: mangBacsiOnline});
-	// 		console.log("benh nhan dang nhap thanh cong");
-	// 	}else{
-	// 		pass=false;
-	// 		console.log(data);
-	// 		console.log("benh nhan dang nhap that bai");
-	// 	}
-	// });
-	// socket.on('bacsi_dangnhap',function(data){
-	// 	var check1 = false;
-	// 	// for(var i=0;i<mangBacsi.length;i++){
-	// 	// 	if(data==mangBacsi[i]){
-	// 	// 		check1=true;
-	// 	// 		mangBacsiOnline.push(mangBacsi[i]);
-	// 	// 		break;
-	// 	// 	}
-	// 	// }
-	// 	var info=JSON.parse(data);
-	// 	var sql="select * from doctor_profile ";
-	// 	connection.query(sql,function(err,results,fields){
-	// 	if(err)throw err;
-	// 	for(var i=0;i<results.length;i++){
-	// 		var username = results[i].Username;
-	// 		var password = results[i].Password;
-	// 		if(info.username == username && info.password == password){
-	// 			console.log('dang nhap thanh cong');
-	// 			check1=true;
-	// 			break;
-	// 		}    
-	// 	}
-	// 	if(check1){
-	// 		pass1=true;
-	// 		console.log("bac si dang nhap thanh cong");
-	// 		socket.emit("server_thongqua_bacsi",{ketqua1:pass1});
-	// 		// io.sockets.emit("server_gui_dsbacsi",{danhsach: mangBacsiOnline});
-	// 	}else{
-	// 		pass1=false;
-	// 		console.log("bac si dang nhap that bai");
-	// 	}
-	    
-	// });
 
-		
-	// });
-	// socket.on('bacsi_dangxuat',function(data){
-	// 	var check2=false;
-	// 	console.log(data);
-	// 	console.log(socket.id);
-	// 	// for(var i=0;i<mangBacsiOnline.length;i++){
-	// 	// 	if(data==mangBacsiOnline[i]){
-	// 	// 		mangBacsiOnline.splice(i,1);
-	// 	// 		break;
-	// 	// 	}
-	// 	// }
-	// 	// io.sockets.emit("server_gui_dsbacsi",{danhsach: mangBacsiOnline});
-	// 	console.log("Bac si dang xuat");
-	// });
-	// socket.on('check socket',function(data){
-	// 	console.log(socket.id);
-	// 	console.log(data);
-	// });
+	// DISCONNECT 
+
+
 	socket.on('disconnect',function(){
 		console.log(socket.id +"  disconnect");
 		socket.disconnect();
