@@ -32,7 +32,6 @@ io.sockets.on("connection",function(socket){
 		connection.query(sql,function(err,results,fields){
 			if(err)throw err;
 			for(var i=0;i<results.length;i++){
-				// console.log(results[i].Username + " "+info.username + " "+ results[i].Password + " " + info.password);
 				if(info.Username == results[i].Username && info.Password == results[i].Password){
 					PatientID = results[i].PatientID;
 					check = true;
@@ -53,14 +52,7 @@ io.sockets.on("connection",function(socket){
 			}
 		});
 	});
-	socket.on('patient_relogin',function(data){
-		    console.log(data);
-			var sqlUpdate = "update patient_online set SocketID='"+socket.id+"' where Username ='"+data+"'";
-			connection.query(sqlUpdate,function(err,results,fields){
-				if(err)throw err;
-				console.log(results.affectedRows +" record(s) updated");
-			});
-	});
+
 	socket.on('patient_logout',function(data){
 			console.log(data);
 			var sqlDelete = "delete from patient_online where Username='"+ data +"'" ;
@@ -95,6 +87,7 @@ io.sockets.on("connection",function(socket){
 				console.log(results[i].Username + " "+info.Username + " "+ results[i].Password + " " + info.Password);
 				if(info.Username == results[i].Username && info.Password == results[i].Password){
 					DoctorID = results[i].DoctorID;
+					socket.un = DoctorID;
 					check = true;
 					break;
 				}
@@ -108,6 +101,7 @@ io.sockets.on("connection",function(socket){
 				});
 				console.log("dang nhap thanh cong");
 				socket.emit('server_check_login_doctor',{ket_qua : check});
+				reloadDoctor();
 			}
 			else{
 				console.log("dang nhap that bai");
@@ -115,14 +109,7 @@ io.sockets.on("connection",function(socket){
 		});
 			
 	});
-	socket.on('doctor_relogin',function(data){
-			console.log(data);
-			var sqlUpdate = "update doctor_online set SocketID='"+socket.id+"' where Username ='"+data+"'";
-			connection.query(sqlUpdate,function(err,results,fields){
-				if(err)throw err;
-				console.log(results.affectedRows +" record(s) updated");
-			});
-	});
+	
 	socket.on('doctor_logout',function(data){
 			console.log(data);
 			var sqlDelete = "delete from doctor_online where Username='"+ data +"'" ;
@@ -132,10 +119,31 @@ io.sockets.on("connection",function(socket){
 				console.log("delete complete");
 			});
 			socket.emit("server_check_logout_doctor",{ket_qua : "1" });
+			reloadDoctor();
 	});
-	socket.on('doctor_request_reload_doctor',function(data){
-		    var arrayDoctorList = new Array();
-			var sqlSelect1 = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=1";
+
+	// DISCONNECT 
+
+
+	socket.on('disconnect',function(){
+		console.log(socket.id +"  disconnect");
+		var sqlDelete = "delete from patient_online where SocketID='"+ socket.id +"'" ;
+			connection.query(sqlDelete,function(err,results,fields){
+				if(err)throw err;
+				console.log("delete complete");
+			});
+		var sqlDelete1 = "delete from doctor_online where SocketID='"+ socket.id +"'" ;
+			connection.query(sqlDelete1,function(err,results,fields){
+				if(err)throw err;
+				console.log("delete complete");
+			});
+
+		reloadDoctor();
+		socket.disconnect();
+	})
+});
+function reloadDoctor(){
+	var sqlSelect1 = "select doctor_profile.Name, doctor_online.DoctorID,doctor_online.Username,doctor_online.status,doctor_online.SocketID from doctor_online join doctor_list on doctor_online.DoctorID = doctor_list.DoctorID join doctor_profile on doctor_profile.DoctorID=doctor_list.DoctorID where doctor_list.DiseaseID=1";
 			connection.query(sqlSelect1,function(err,results,fields){
 				if(err)throw err;
 				console.log(results);
@@ -159,15 +167,6 @@ io.sockets.on("connection",function(socket){
 				console.log(results);
 				io.sockets.emit('server_reload_doctor_4',{arrayDoctor : results});
 			});
-	});
-
-	// DISCONNECT 
-
-
-	socket.on('disconnect',function(){
-		console.log(socket.id +"  disconnect");
-		socket.disconnect();
-	})
-});
+}
 
 // module.exports = app;
