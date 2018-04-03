@@ -5,6 +5,7 @@
 	"dependencies": {
 		"express": "*",
 		"mysql": "^2.15.0",
+		"opentok": "^2.6.2",
 		"socket.io": "*",
 		"socketio-file-upload": "^0.4.4"
 	}
