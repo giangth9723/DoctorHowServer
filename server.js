@@ -29,12 +29,14 @@ io.sockets.on("connection",function(socket){
 		var info = JSON.parse(data);
 		console.log(info);
 		var sql = "select * from patient_profile";
+		var Patient_info = [];
 		var Patient_id;
 		connection.query(sql,function(err,results,fields){
 			if(err)throw err;
 			for(var i=0;i<results.length;i++){
 				if(info.Username == results[i].Username && info.Password == results[i].Password){
 					Patient_id = results[i].Patient_id;
+					Patient_info.push(results[i]);
 					check = true;
 					break;
 				}
@@ -47,7 +49,11 @@ io.sockets.on("connection",function(socket){
 					console.log("record insert , 1 patient is online");
 				});
 				console.log("dang nhap thanh cong");
-				socket.emit('server_check_login_patient',{ket_qua : check});
+				Patient_info.push(check);
+				for(var i = 0 ;i< Patient_info.length;i++){
+					console.log(Patient_info[i]);
+				}
+				socket.emit('server_check_login_patient',{ket_qua : Patient_info});
 			}else{
 				console.log("dang nhap that bai");
 				socket.emit('server_check_login_patient',{ket_qua : check});
@@ -102,9 +108,12 @@ io.sockets.on("connection",function(socket){
 		
 	});
 	socket.on('patient_call',function(data){
-		var doctorSocketID = data;
-
-		opentok.createSession(function(err, session) {
+		var info = JSON.parse(data);
+		var doctorSocketID = info.Doctor_socket_id;
+		var activity_before = info.Activity_name;
+		var patient_id = info.Patient_id;
+		var patient_name = info.Patient_name;
+				opentok.createSession(function(err, session) {
 			if (err) return console.log(err);
 			var basket = [];
 			console.log(session.sessionId);
@@ -122,20 +131,34 @@ io.sockets.on("connection",function(socket){
      basket.push(token);
      console.log(basket[0]);
      console.log(basket[1]);
-     console.log(doctorSocketID);
+     console.log(info);
+     info.Doctor_socket_id = socket.id;
+     console.log(info.Doctor_socket_id);
      socket.emit('server_execute_call',{component : basket});
      io.to(doctorSocketID).emit('server_send_request_code',{component : basket});
-     io.to(doctorSocketID).emit('server_request_call',{socket_id : socket.id});
+     io.to(doctorSocketID).emit('server_request_call',{info : info});
      
 });
 	});
+	socket.on('patient_cancel_call',function(data){
+		io.to(data).emit('server_send_cancelation_call_to_doctor',{abc : "abc"});
 
+	});
+	socket.on('patient_finish_call',function(data){
+		io.to(data).emit('server_send_finish_call_to_doctor',{abc : "abc"});
+	});
+
+	
 
 	// DOCTOR REQUEST 
-
+	socket.on('doctor_finish_call',function(data){
+		io.to(data).emit('server_send_finish_call_to_patient',{abc : "abc"})
+	});
+	socket.on('doctor_cancel_call',function(data){
+		io.to(data).emit('server_send_cancelation_call_to_patient',{abc : "abc"});
+	});
 	socket.on('doctor_accept_call',function(data){
-		console.log(data);
-		io.to(data).emit('server_send_acception',{abc : "abc"});
+		io.to(data).emit('server_send_acception_call_to_patient',{abc : "abc"});
 	});
 	socket.on('doctor_login',function(data){
 		var check = false;
@@ -143,12 +166,14 @@ io.sockets.on("connection",function(socket){
 		console.log(info);
 		var sql = "select * from doctor_profile";
 		var Doctor_id;
+		var Doctor_info = [];
 		connection.query(sql,function(err,results,fields){
 			if(err)throw err;
 			for(var i=0;i<results.length;i++){
 				console.log(results[i].Username + " "+info.Username + " "+ results[i].Password + " " + info.Password);
 				if(info.Username == results[i].Username && info.Password == results[i].Password){
 					Doctor_id = results[i].Doctor_id;
+					Doctor_info.push(results[i]);
 					check = true;
 					break;
 				}
@@ -160,8 +185,12 @@ io.sockets.on("connection",function(socket){
 					if(err)throw err;
 					console.log("record insert 1 doctor is online");
 				});
+				Doctor_info.push(check);
 				console.log("dang nhap thanh cong");
-				socket.emit('server_check_login_doctor',{ket_qua : check});
+				for(var i = 0 ;i< Doctor_info.length;i++){
+					console.log(Doctor_info[i]);
+				}
+				socket.emit('server_check_login_doctor',{ket_qua : Doctor_info});
 				reloadDoctor();
 			}
 			else{
@@ -199,7 +228,6 @@ io.sockets.on("connection",function(socket){
 			if(err)throw err;
 			console.log("delete complete");
 		});
-
 		reloadDoctor();
 		socket.disconnect();
 	})
