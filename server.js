@@ -144,13 +144,25 @@ io.sockets.on("connection",function(socket){
 		io.to(data).emit('server_send_cancelation_call_to_doctor',{abc : "abc"});
 
 	});
+	socket.on('patient_accept_request_emr',function(data){
+		io.to(data).emit('server_send_finish_call_to_doctor',{answer : "yes"});
+	});
+	socket.on('patient_decline_request_emr',function(data){
+		io.to(data).emit('server_send_finish_call_to_doctor',{answer : "no"});
+	});
 	socket.on('patient_finish_call',function(data){
-		io.to(data).emit('server_send_finish_call_to_doctor',{abc : "abc"});
+		io.to(data).emit('server_send_finish_call_to_doctor',{answer : "alo"});
 	});
 
-	
-
 	// DOCTOR REQUEST 
+	socket.on('doctor_request_patient_info_emr',function(data){
+		sqlSelect = "select * from patient_profile where patient_id ="+data+"";
+		connection.query(sqlSelect,function(err,results,fields){
+			if(err)throw err;
+			socket.emit('server_send_patient_info_emr',{patient_full_info : results});
+		});
+		
+	});
 	socket.on('doctor_finish_call',function(data){
 		io.to(data).emit('server_send_finish_call_to_patient',{abc : "abc"})
 	});
