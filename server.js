@@ -74,6 +74,18 @@ io.sockets.on("connection",function(socket){
 			console.log("delete complete");
 		});
 	});
+	socket.on('patient_book_appointment',function(data){
+		var check = false;
+		var info = JSON.parse(data);
+		console.log(info);
+		var sqlInsert = "INSERT INTO `appointment`(`Date`, `Patient_id`, `Doctor_id`, `Time`, `Status`, `Content`,`Emr_type`) VALUES ('"+info.Date+"',"+info.Patient_id+","+info.Doctor_id+",'"+info.Time+"','-1','"+info.Content+"','"+info.Emr_type+"')";
+		connection.query(sqlInsert,function(err,results,fields){
+			if(err)throw err;
+			console.log("insert success");
+			check = true;
+			socket.emit('server_send_book_result',{ketqua : check});
+		});
+	});
 	socket.on('patient_load_doctor',function(data){
 		console.log(data);
 		var sqlSelect = "SELECT doctor_profile.`Doctor_id`, `Username`, `Password`, `Doctor_name`, `Profile_picture`, `Gender`, `Clinic`, `Degree`, `Birthday`, `ID_Number`, `Phone_number`, `Address_number`, `Address_street`, `Address_distric`, `Address_city`, `Description`, `Online_status`, `Socket_id` FROM `doctor_profile` join doctor_disease on doctor_profile.Doctor_id=doctor_disease.Doctor_id WHERE doctor_disease.Disease_id ="+data+"";                       
@@ -190,7 +202,7 @@ io.sockets.on("connection",function(socket){
 		});
 	});
 	socket.on('patient_load_history_call',function(data){
-		sqlSelect ="SELECT `Call_id`, `Day`, `Start_time`, `End_time`, `Duration`, history_call.`Patient_id`,history_call.`Doctor_id`,doctor_profile.Doctor_name,patient_profile.Patient_name, `Emr_type`, `Emr_id`, `Emr_status` FROM `history_call` join doctor_profile on history_call.Doctor_id = doctor_profile.Doctor_id join patient_profile on history_call.Patient_id = patient_profile.Patient_id where history_call.Patient_id="+data+"";
+		sqlSelect ="SELECT `Call_id`, `Day`, `Start_time`, `End_time`, `Duration`, history_call.`Patient_id`,history_call.`Doctor_id`,doctor_profile.Doctor_name,patient_profile.Patient_name, `Emr_type`, `Emr_id`, `Emr_status` FROM `history_call` join doctor_profile on history_call.Doctor_id = doctor_profile.Doctor_id join patient_profile on history_call.Patient_id = patient_profile.Patient_id where history_call.Patient_id="+data+" ORDER BY Day DESC,Start_time DESC";
 		connection.query(sqlSelect,function(err,results,fields){
 			if(err)throw err;
 			console.log(results);
@@ -200,8 +212,16 @@ io.sockets.on("connection",function(socket){
 
 
 	// DOCTOR REQUEST 
+	socket.on('doctor_load_appointment_list',function(data){
+		sqlSelect = "SELECT `Appointment_id`, `Date`, appointment.`Patient_id`,appointment.`Doctor_id`,doctor_profile.Doctor_name,patient_profile.Patient_name,`Time`, `Status`, `Content`, `Emr_type` FROM `appointment` join patient_profile on appointment.Patient_id = patient_profile.Patient_id join doctor_profile on appointment.Doctor_id = doctor_profile.Doctor_id WHERE appointment.Doctor_id ="+data+"";
+		connection.query(sqlSelect,function(err,results,fields){
+			if(err)throw err;
+			console.log(results);
+			socket.emit("server_load_appointment_for_doctor",{listAppointment : results});
+		});
+	});
 	socket.on('doctor_load_history_call',function(data){
-		sqlSelect ="SELECT `Call_id`, `Day`, `Start_time`, `End_time`, `Duration`, history_call.`Patient_id`,history_call.`Doctor_id`,doctor_profile.Doctor_name,patient_profile.Patient_name, `Emr_type`, `Emr_id`, `Emr_status` FROM `history_call` join doctor_profile on history_call.Doctor_id = doctor_profile.Doctor_id join patient_profile on history_call.Patient_id = patient_profile.Patient_id where history_call.Doctor_id="+data+"";
+		sqlSelect = "SELECT `Call_id`, `Day`, `Start_time`, `End_time`, `Duration`, history_call.`Patient_id`,history_call.`Doctor_id`,doctor_profile.Doctor_name,patient_profile.Patient_name, `Emr_type`, `Emr_id`, `Emr_status` FROM `history_call` join doctor_profile on history_call.Doctor_id = doctor_profile.Doctor_id join patient_profile on history_call.Patient_id = patient_profile.Patient_id where history_call.Doctor_id="+data+" ORDER BY Day DESC,Start_time DESC ";
 		connection.query(sqlSelect,function(err,results,fields){
 			if(err)throw err;
 			console.log(results);
@@ -217,7 +237,7 @@ io.sockets.on("connection",function(socket){
 			console.log(results);
 			console.log("insert thanh cong");
 			var id = results.insertId;
-			var sqlUpdate = "UPDATE `history_call` SET Emr_id ="+id+",Emr_status = 1 where Patient_id ="+info.Patient_id+" and Doctor_id="+info.Doctor_id+" and Emr_type='dermatology'" ;
+			var sqlUpdate = "UPDATE `history_call` SET Emr_id ="+id+",Emr_status = 1 where Patient_id ="+info.Patient_id+" and Doctor_id="+info.Doctor_id+" and Emr_type='dermatology' ORDER BY Day DESC,Start_time DESC LIMIT 1" ;
 			connection.query(sqlUpdate,function(err,results,fields){
 				if(err)throw err;
 				console.log("update nice");
@@ -233,7 +253,7 @@ io.sockets.on("connection",function(socket){
 			if(err)throw err;
 			console.log("insert thanh cong");
 			var id = results.insertId;
-			var sqlUpdate = "UPDATE `history_call` SET Emr_id ="+id+",Emr_status = 1 where Patient_id ="+info.Patient_id+" and Doctor_id="+info.Doctor_id+" and Emr_type='female'" ;
+			var sqlUpdate = "UPDATE `history_call` SET Emr_id ="+id+",Emr_status = 1 where Patient_id ="+info.Patient_id+" and Doctor_id="+info.Doctor_id+" and Emr_type='female' ORDER BY Day DESC,Start_time DESC LIMIT 1" ;
 			connection.query(sqlUpdate,function(err,results,fields){
 				if(err)throw err;
 				console.log("update nice");
@@ -249,7 +269,7 @@ io.sockets.on("connection",function(socket){
 			if(err)throw err;
 			console.log("insert thanh cong");
 			var id = results.insertId;
-			var sqlUpdate = "UPDATE `history_call` SET Emr_id ="+id+",Emr_status = 1 where Patient_id ="+info.Patient_id+" and Doctor_id="+info.Doctor_id+" and Emr_type='mental'" ;
+			var sqlUpdate = "UPDATE `history_call` SET Emr_id ="+id+",Emr_status = 1 where Patient_id ="+info.Patient_id+" and Doctor_id="+info.Doctor_id+" and Emr_type='mental' ORDER BY Day DESC,Start_time DESC LIMIT 1" ;
 			connection.query(sqlUpdate,function(err,results,fields){
 				if(err)throw err;
 				console.log("update nice");
@@ -335,6 +355,8 @@ io.sockets.on("connection",function(socket){
 				reloadDoctor();
 			}
 			else{
+				Doctor_info.push("fail");
+				Doctor_info.push(check);
 				socket.emit('server_check_login_doctor',{ket_qua : Doctor_info});
 				console.log("dang nhap that bai");
 			}

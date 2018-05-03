@@ -8,19 +8,19 @@ var mysql = require("mysql");
 // 	dateStrings : true
 // });
 // module.exports = connection;
-// var connection = mysql.createConnection({
-// 	host:'localhost',
-// 	user:'root',
-// 	password:'',
-// 	database: 'doctorhow',
-// 	dateStrings : true
-// });
-// module.exports=connection;
 var connection = mysql.createConnection({
-	host:'sql12.freemysqlhosting.net',
-	user:'sql12235712',
-	password:'VSaK75UxLG',
-	database: 'sql12235712',
+	host:'localhost',
+	user:'root',
+	password:'',
+	database: 'doctorhow',
 	dateStrings : true
 });
-module.exports = connection;
+module.exports=connection;
+// var connection = mysql.createConnection({
+// 	host:'sql12.freemysqlhosting.net',
+// 	user:'sql12235712',
+// 	password:'VSaK75UxLG',
+// 	database: 'sql12235712',
+// 	dateStrings : true
+// });
+// module.exports = connection;
